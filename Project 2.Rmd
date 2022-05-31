@@ -1,0 +1,485 @@
+---
+title: "What factors determine survival among Cardiovascular Heart Disease (CHD) Patients?"
+author: "Yordanos Alemu, Rabab Mohammed, Kovenda Mubale"
+date: "1/16/2021"
+output: word_document
+toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract:
+
+This data set from Plos One, is about Cardiovascular Heart Disease (CHD). The study is based on 299 patients of Cardiovascular Heart Disease (CHD) comprising of 105 women and 194 men. All the patients were more than 40 years old, having left ventricular systolic dysfunction and falling in NYHA class III and IV. Cardiovascular Heart Disease (CHD) was diagnosed by cardiac echo report or notes written by physician. The information related to risk factors were taken from blood reports while smoking status and blood pressure were taken from physician's notes.
+Cardiovascular Heart Disease (CHD) is now top reason causing 31% of deaths globally. Pakistan is also included in the list of countries where prevalence of CHD is increasing significantly. According to report by Al-Shifa hospital, 33% of Pakistani population above 45 has hypertension, 25% of patients over 45 years suffer diabetes mellitus, and CHD deaths in Pakistan has reached about 200,000 per year i.e. 410/100,000 of the population). All this results in increased prevalence of heart failure. Rate of heart failure patients in Pakistan is estimated to be 110 per million. Rising stress of economic and social issues in the modern era, greasy food with little exercise results towards increased prevalence of heart failure in Pakistan.
+The main objective of this study is to determine the factors that are critical for survival among Cardiovascular Heart Disease (CHD) Patients by using data from Faisalabad (third most populous city of Pakistan).
+
+
+
+```{r}
+library(readr)
+survival <- read_csv("S1Data_fixed.csv")
+
+attach (survival)
+head(survival)
+
+```
+
+```{r}
+na.omit(survival)
+```
+```{r}
+survival$index <-1:nrow(survival)
+head(survival)
+```
+
+
+## Data Characteristic:
+
+Response variable:
+
+Survival - Cardiovascular Heart Disease (CHD) Pateints that were still alive after the follow up period by the physicians. If the patient was alive by the follow up date: 1 and if not: 0.
+
+Predictor variables:
+
+Age, serum sodium, serum creatinine, gender, smoking, Blood Pressure (BP), Ejection Fraction (EF), anemia, platelets, Creatinine Phosphokinase (CPK) and diabetes. These are considered as potential variables explaining mortality caused by Cardiovascular Heart Disease (CHD). 
+
+Age and Time are continuous variables. EF, serum sodium, platelets, CPK and serum creatinine were taken as categorical variables.
+
+Time is follow up time was 4 to 285 days with an average of 130 days.
+
+EF was divided into three levels (i.e. EF<30 (coded as 0), 30<EF<45 (coded as 1) and EF>45 (coded as 2)) and platelets was also divided into three level on the basis of quartiles. 
+
+Sodium was also coded into three levels based on the quartiles
+
+Serum Creatinine greater than its normal level (1.5) is an indicator of renal dysfunction. Its effect on mortality was studied as creatinine >1.5 (coded as 0) vs <1.5 (coded as 1). 
+
+Anemia in patients was assessed by their haematocrit level. The patients with haematocrit less than 36 (minimum normal level of haematocrit) were taken as anemic. 
+
+
+```{r}
+
+library (ggplot2)
+library (tidyr)
+
+ggplot(gather(survival), aes(value)) + 
+  geom_histogram(bins = 8) + 
+  facet_wrap(~key, scales = 'free_x')
+
+```
+
+All the predictor variables are not exteremely right or left skewed. We think that all the varaibles are catagorical variales expect for Age and Time.
+
+
+# Scatterplot matrix of columns:
+
+```{r}
+# Scatterplot matrix of columns 
+pairs (survival, col=ifelse (Survival==0, "green", "black") )
+#pairs (survival[,2:10], col= EF)
+```
+
+The Explantory Analysis shows that all our variables are categorical execpt for Time and Age.
+
+
+```{r}
+transcorr = cor(survival [, c(1:10, 10, 12:13)], use= "complete.obs") 
+library("corrplot")
+
+```
+
+```{r}
+## corrplot 0.84 loaded
+corrplot (transcorr, method = "number", number.cex=0.6)
+```
+
+The correlation matrix shows that the varaible Time and surviaval are higly correlated (0.53). Gender and Smoking have a high correlation as well(0.45). Survaial and Serum Creatinine appears to have a moderate correlation(0.37).
+
+
+```{r}
+library(MASS) 
+table1= xtabs(~Survival+EF)
+table1
+
+```
+93 patients had an Ejection Fraction of less than 30 %, while 146 have an Ejection Fraction of 30 to 45 % and only 60 have an Ejection Fraction higher than 45% . Of all the patients that had an ejection fraction less than 30 %, 55 % died of cardio-vascular heart disease. That is 32% more than the patients who died that had an ejection fraction higher than 45%. Patients with an ejection fraction between 30 and 45 % had the highest survival rate at 79 %. You have a higher chance of dying if your ejection fraction is less than 30 %.
+
+
+
+```{r}
+table2= xtabs(~Survival+Gender)
+table2
+
+
+```
+
+Odds of surviving
+. Male 132/194 = 0.680
+. Female 71/105 = 0.676 .... Odds Ratio for Male VS Female -> 0.680/0.676 = 1.0059
+
+Female patients are 1.0059 times more likely to survive cardio-vascular heart diseases than male patients. This essentially means the chances of survival for male and female patients is approximately 1 to 1.
+
+
+
+```{r}
+tabel4=xtabs(~Survival+Diabetes)
+tabel4
+
+```
+
+Odds of not surviving
+. Diabetic 40/125 = 0.32
+. Non-diabetic 56/174 = 0.32 .... Odds Ratio for Diabetic VS Non-Diabetic -> 0.32/0.32 = 1
+
+This essentially means the chances of not surviving for Diabetic and non-Diabetic patients is 1 to 1.
+
+```{r}
+tabel7=xtabs(~Survival+Sodium)
+tabel7
+
+```
+
+Urinary Sodium to creatine ratio or Sodium levels 0 to 3 represent the quartiles of the collected Sodium ratios, 0 being less 25th quartile and 3 being greater than 75th quartile. We can see that when the patient's Sodium to Creatine ratio is less than the 25th quartile they have less than 50% chance of surving cardio-vascular heart disaese. While pateints with Sodium to Creatine ratio greater than the 25th quartile all have higher than 70% chance of surviving cardio-vascular heart disease. 
+
+#Initial Model:
+
+```{r}
+
+order1_fit1 <- glm (Survival  ~ as.factor(EF)  + `Serum Creatinine` + Diabetes + TIME + Gender + Smoking +  BP + Anaemia + Age  +  Sodium +  platelets + CPK, family = binomial) 
+summary(order1_fit1)
+ 
+```
+
+```{r}
+exp (order1_fit1$coefficients)
+```
+
+```{r}
+exp (confint (order1_fit1))
+```
+
+The model shows that pateints having an ejection fraction between 30 to 45 %  and higher 45 % are significantly different from patients who have an ejection fraction of less than 30 %. The model also shows that Serum Creatinine, Time, Age and CPK are significant predictors for predicting the survival of cardio-vascular heart disease. For every unit increase in Serum Creatinine the odds of surviving cardio-vascular disease go up by 5.3554847-folds. The odds of surviving cardio-vascular heart disease for male pateints vs female pateints is not only 1 to 1 as we predicted earlier but essentially ranges from 0.74725273 to  4.1808057 -folds. 
+
+
+```{r}
+# Make a plot similar to Y vs Y-hat for linear regression
+order1_fit1.logit = predict (order1_fit1)
+plot (jitter (Survival, 0.2) ~ order1_fit1.logit, data=survival)
+# Add the overall fitted logistic curve to the plot, and a lowess fit
+pihat.order1_fit1 = predict (order1_fit1, type='response')
+pihat.ord = order (pihat.order1_fit1)
+lines (order1_fit1.logit [pihat.ord], pihat.order1_fit1 [pihat.ord])
+lines (lowess (order1_fit1.logit [pihat.ord], pihat.order1_fit1 [pihat.ord]), col='red', lty=2)
+```
+ 
+The jittered response vs. predicted values with the fitted logistic curve and a lowess fit shows that the model fits the data aaproximately well since the solid and the jittered line are approximately similar in shape.
+ 
+
+```{r}
+plot(predict(order1_fit1),residuals(order1_fit1))
+abline(h=0,lty=1,col="brown")
+```
+The linaerity condition is statisfied because the plot is flat and right on zero.
+
+
+```{r}
+par (mfrow=c(1,2)) 
+plot (order1_fit1, which=c(5))
+```
+There are no points with high leverage or high Cook's Distance therefore those influence measures do not appear on the plot. The point index 240 has a standerized residual around 6. We will see whether it is an influential point .
+
+#Inference Analysis to confirm that there is no outliers:
+
+```{r}
+survival$Residual = round (order1_fit1$residuals, 4)
+survival$leverage = round (hatvalues(order1_fit1), 4)
+survival$rstudent = round (rstudent(order1_fit1), 4)
+
+
+```
+
+Pull out the cases with high leverage and large residuals.
+
+```{r}
+
+high.levg.resd = survival [survival$leverage > 3*(order1_fit1$rank) / (order1_fit1$rank + order1_fit1$df.residual) |abs (order1_fit1$residuals) > 30 , ]
+
+high.levg.resd[order(-high.levg.resd$rstudent),][c(1,9:17)]
+```
+
+Although index 240 has a large residual value, however, its 0.0131 leverage value is not bigger than the Leverage Cutoff value at 0.13043478 (3(k+1)/n). Therefore, this point is an influential point.
+
+We will see whether there are any other influential points that do not have high residuals as index 240.
+
+```{r}
+high.Leverage = survival [survival$leverage > 0.13043478 & is.na(survival$leverage) == FALSE, ]
+high.Leverage[order(-high.Leverage$leverage),][c(1,9:17)]
+```
+
+There are only 2 points with leverage values higher than the Leverage Cutoff value at 0.13043478 (3(k+1)/n). The point index 242 has the highest leverage value of 0.134.
+
+
+```{r}
+car::vif(order1_fit1)
+
+```
+All of the VIF are less than 5. Hence, multi-colinearity is low in our model. We will be doing stepwise regresion to find the best model.
+
+
+#Model Selection:
+
+```{r}
+step.AIC = step (order1_fit1, direction = "both")
+summary(step.AIC)
+beta2 = coefficients(step.AIC)
+exp (beta2)
+exp (confint (step.AIC))
+```
+
+
+```{r}
+step.BIC = step(order1_fit1,  direction = "both", k=log (order1_fit1$rank  + order1_fit1$df.residual))
+summary(step.BIC)
+```
+
+
+```{r}
+summary(step.AIC)
+summary(step.BIC)
+```
+
+
+```{r}
+anova ( step.BIC, step.AIC )
+pchisq(2.0858, 1,lower.tail = FALSE)
+```
+We choose the AIC model to do the interaction effects on becuase it has significant predictors and has a lower residual deviance of 214.42 Residual Deviance on 292 degrees of freedom. The pvalue  (0.1486743) which is less than 0.05 the typical cutoff. 
+
+
+```{r}
+
+# Center quantitative predictors and add interaction effects
+
+my.center = function (y) y - mean (y)
+
+survival$TIME.c = my.center (survival$TIME)
+survival$Age.c = my.center (survival$Age)
+
+
+fit1_InteractionEffects = glm (Survival ~ (as.factor(EF) + TIME.c + CPK + `Serum Creatinine` + Age.c)^2,
+               data=survival, 
+               family = binomial)
+summary (fit1_InteractionEffects)
+
+```
+
+
+#Final Stepwise Regression 
+
+
+```{r}
+step.AIC_final = step (fit1_InteractionEffects, direction = "both")
+summary(step.AIC_final)
+
+```
+
+```{r}
+step.BIC_final = step (fit1_InteractionEffects, direction = "both",k=log (fit1_InteractionEffects$rank  + fit1_InteractionEffects$df.residual))
+summary(step.BIC_final)
+```
+
+```{r}
+summary(step.AIC_final)
+summary(step.BIC_final)
+```
+
+```{r}
+anova (step.AIC_final, step.BIC_final)
+pchisq(11.949, 3, lower.tail = FALSE)
+```
+
+We choose AIC model as final becuase it's Residual Deviance is 202.47 which less than the Residual Deviance 214.42 of the BIC model. The pvalue (0.0075599) is less than 0.05 which means that the two models are statistically differnt from each other.
+
+```{r}
+final_model_1 = step.AIC_final
+summary(final_model_1)
+```
+
+
+```{r}
+### Interaction plots
+
+# New categorize function
+
+categorize = function (x, quantiles=(1:3)/4) {
+  cutoffs = quantile (x, quantiles)
+  n.cutoffs = length (cutoffs)
+  result = rep ("C1", length (x))
+  for (j in 1:n.cutoffs) {
+    result [x > cutoffs [j]] = paste ("C", j+1, sep="")
+  }
+  return (result)
+}
+
+library (ggplot2)
+
+qplot (TIME, predict (final_model_1), data=survival, color=categorize (EF)) + geom_smooth (method="lm")
+
+qplot (`Serum Creatinine`, predict (final_model_1), data=survival, color=categorize (TIME)) + geom_smooth (method="lm")
+
+```
+
+
+The interaction plot between time and Ejection Fracton shows that the predicted logits of suriving cardio-vascular disease increases over time for all ejection fraction (EF) categories(EF<30 (coded as 0), 30<EF<45 (coded as 1)). Patients with 30<EF<45 have the highest rise in the predicted logits of suriving cardio-vascular disease over time. We had mentioned earlier with our frequency table that patients with an ejection fraction (EF) between 30 and 45 % had the highest survival rate at 79 %. However, with this interaction plot with time we see that statement holds true only for patients whose follow up time was longer than 100 days. We see that for patients with a follow up time of less than 25 days, they have lowest predicted logits of suriving cardio-vascular disease. 
+
+
+The interaction plot between Serum Creatinine and time shows the predicted logits of surviving cardio-vascular disease increases over time because C1 (25th quartile of follow time) is the lowest and C4 (75th quartile of follow time) is the highest in the graph. This effect was already accounted for in the previuos interaction plot. Serum Creatinine was coded as follows, >1.5(indicator of renal dysfunction coded as 0) and < 1.5(normal level coded as 1). We can see from the positive slope of all four of the TIME graphs that all patients with renal dysfunction (0) have lower predicted logits of surviving than those who do not (1). All patients with follow up time in C4 (75 quartile),regardless of whether they have renal dysfuntion, have higher predicted logits of suriving cardio-vascular disease than all other patients in C1,2 & 3, regardless of whether those patients do not have renal dysfuntion. Patients with follow up time in C4 (75 quartile), also have the most noticeable change in the predicted logits for surviving cardio-vascular disease between patients with renal dysfunction(0) and patients without (0). 
+
+#Final Model:
+
+```{r}
+exp (confint (final_model_1))
+```
+
+```{r}
+exp (final_model_1$coefficients)
+```
+
+An increase in a unit of Creatinine Phosphokinase (CPK) decreases a patients of odds of surviving by 0.331-folds. A unit increase in Age decreases a patients odds of surviving by a range of 0.0808 to 0.01856-folds.
+
+```{r}
+preds = predict (final_model_1, se.fit = T) 
+pred.df = cbind.data.frame (survival, as.data.frame (preds)) 
+pred.df$lwr = pred.df$fit - 1.96 * pred.df$se.fit 
+pred.df$upr = pred.df$fit + 1.96 * pred.df$se.fit 
+pred.df$fit.pr = round (exp (pred.df$fit) / (1 + exp (pred.df$fit)), 3) 
+pred.df$lwr.pr = round (exp (pred.df$lwr) / (1 + exp (pred.df$lwr)), 3) 
+pred.df$upr.pr = round (exp (pred.df$upr) / (1 + exp (pred.df$upr)), 3)
+head(pred.df)
+```
+
+#Patients Predictions:
+
+```{r}
+# Predictions for patients in their 70s and older. 
+pred.df[c(2, 17, 88, 48, 40),c(1,2,3,8,17:20)]
+
+```
+
+```{r}
+# Predictions for patients in their 40s and 50s  
+pred.df[c(103, 66, 83, 21, 11),c(1,2,3,8,17:20)]
+```
+
+#Model Diagnostics:
+
+```{r}
+# Diagnostic plots for model hp9
+
+par (mfrow=c(1,2))
+plot (jitter (Survival, 0.2) ~ predict (final_model_1), data=survival)
+logit.9 = predict (final_model_1)
+ord9 = order (logit.9)
+pihat.9 = exp (logit.9) / (1 + exp (logit.9))
+lines (logit.9 [ord9], pihat.9 [ord9])
+
+# Lowess fit
+lines (lowess (logit.9, survival$Survival), col='red', lty=2)
+plot (final_model_1, which=1)
+
+```
+
+```{r}
+# Likelihood ratio test for first model
+
+pchisq (order1_fit1$null.deviance - order1_fit1$deviance,
+        order1_fit1$df.null - order1_fit1$df.residual, lower.tail = F)
+```
+
+The pvalue (1.570568e-28) is less than 0.05, therfore we reject the null hypothesis and conclude that at least one of our parameters is different from zero.
+
+```{r}
+# Likelihood ratio test for final model
+
+pchisq (final_model_1$null.deviance - final_model_1$deviance,
+        final_model_1$df.null - final_model_1$df.residual, lower.tail = F)
+
+```
+
+The pvalue (1.553978e-32) is less than 0.05, therfore we reject the null hypothesis and conclude that at least one of our parameters is different from zero.
+
+
+```{r}
+# Goodness of fit test
+
+pchisq (final_model_1$deviance, final_model_1$df.residual, lower.tail = F)
+```
+The p_value(0.9999696) is bigger than (0.05), suggesting that there is no significant lack of fit in the model.
+
+
+#Influence diagnostics analysis:
+
+```{r}
+plot(final_model_1,which = 5)
+```
+
+
+# ROC plot:
+
+```{r}
+# ROC Curve for model final_model_1
+
+# ROC curve - install package ROCR
+par (mfrow=c(1,1))
+library(ROCR)
+pred1 <- prediction(final_model_1$fitted.values, final_model_1$y)
+perf1 <- performance(pred1,"tpr","fpr")
+auc1 <- performance(pred1,"auc")@y.values[[1]]
+auc1
+plot(perf1, lwd=2, col=2)
+abline(0,1)
+legend(0.6, 0.3, c(paste ("AUC=", round (auc1, 4), sep="")),   lwd=2, col=2)
+
+# Extract the X and Y values from the ROC plot, as well as the probability cutoffs
+roc.x = slot (perf1, "x.values") [[1]]
+roc.y = slot (perf1, "y.values") [[1]]
+cutoffs = slot (perf1, "alpha.values") [[1]]
+
+auc.table = cbind.data.frame(cutoff=pred1@cutoffs, 
+                             tp=pred1@tp, fp=pred1@fp, tn=pred1@tn, fn=pred1@fn)
+names (auc.table) = c("Cutoff", "TP", "FP", "TN", "FN")
+auc.table$sensitivity = auc.table$TP / (auc.table$TP + auc.table$FN)
+auc.table$specificity = auc.table$TN / (auc.table$TN + auc.table$FP)
+auc.table$FalsePosRate = 1 - auc.table$specificity
+auc.table$sens_spec = auc.table$sensitivity + auc.table$specificity
+
+# Find the row(s) in the AUC table where sensitivity + specificity is maximized
+
+auc.best = auc.table [auc.table$sens_spec == max (auc.table$sens_spec),]
+auc.best
+
+# Plot the maximum point(s) on the ROC plot
+
+points (auc.best$FalsePosRate, auc.best$sensitivity, cex=1.3)
+```
+
+The AUC is 0.916, meaning that the model correctly predicted for 91.6% of the cases in our dataset. This suggests that our final model predicts surviving cardio-vascular disease better than simply guessing. Our cutoff for determining predictions of failure or no failure was 0.6412. This has a false positive rate of 156 and a sensitivity (probability of a true positive prediction) of 0.84. 
+
+
+#Final Conclusions: 
+
+We can conclude that, among the predictor variables from our dataset, the presence of Ejection Fraction, Time, Creatinine Phosphokinase (CPK), Serum Creatinine and Age were helpful in explaining patients' survival Cardiovascular Heart Disease (CHD). 
+We also found a significant interaction effect between Time and Ejection Fraction. The AUC of this model is 0.916, showing that these five variables and the four interaction plots help predict patients' survival Cardiovascular Heart Disease (CHD) better than simply guessing, and the low p-value of 1.553978e-32 from the Likelihood Ratio test confirmed the significance of the model. The model’s sensitivity was  0.84 and specificity was 0.84375, suggesting that the model does a much better job predicting non-failures than failures.
+This analysis begs the question of what other variables can explain dam failure, as the variables from this set could not fully account for dam failure.
+
+Some follow-up questions to this analysis could include:
+
+1. Our analysis shows that an increase in age decreases a patient's chance of survival; it also indicates that if a patient is older than 75 years, with EF of 1 or 2, no renal dysfunction and has a follow-up time after 100 days(not sick). Those patients will have a better survival rate than those who have the same age but have renal dysfunction and EF of 0.
+Will creating an educational program that prevents renal dysfunction and maintains an EF level of 1 or 2 to improve the survival rate for patients older than 75 years and who have a follow-up time after 100 days.
+
+2. Are there other factors that could be measured, such as obeisty, cholestrol, family history and physical inactivity that could improve the predictability of the model?
+
+
+
