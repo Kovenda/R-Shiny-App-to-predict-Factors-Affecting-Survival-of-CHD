@@ -271,7 +271,7 @@ high.levg.resd[order(-high.levg.resd$rstudent),][c(1,9:17)]
 ||TIME  |  EF| Sodium |Serum Creatinine |platelets  | CPK| index |Residual| leverage| rstudent|
 |---|---|---|---|---|---|---|---|---|---|---|
 |1 |30|0 |1|0 |3|3|240 |39.6|0.0131|2.81|
-> Although index 240 has a large residual value, however, its 0.0131 leverage value is not bigger than the Leverage Cutoff value at 0.13043478 (3(k+1)/n). Therefore, this point is an influential point. We will see whether there are any other influential points that do not have high residuals as index 240.
+> Index 240 has a large residual value, however, its 0.0131 leverage value is not bigger than the Leverage Cutoff value at 0.13043478 (3(k+1)/n). Therefore, this point is an influential point. We will see whether there are any other influential points that do not have high residuals as index 240.
 
 ```{r}
 high.Leverage = survival [survival$leverage > 0.13043478 & is.na(survival$leverage) == FALSE, ]
@@ -305,5 +305,80 @@ car::vif(order1_fit1)
 |CPK      |          1.254166 | 1       | 1.119896|
 
 > All of the VIF are less than 5. Hence, multi-colinearity is low in our model. We will be doing stepwise regresion to find the best model.
+
+# Final Model Selction using Step Functions
+
+## AIC Step Function
+
+```{r}
+step.AIC = step (order1_fit1, direction = "both")
+summary(step.AIC)
+beta2 = coefficients(step.AIC)
+exp (beta2)
+exp (confint (step.AIC))
+```
+## BIC Step Function
+```{r}
+step.BIC = step(order1_fit1,  direction = "both", k=log (order1_fit1$rank  + order1_fit1$df.residual))
+summary(step.BIC)
+```
+
+## ANOVA for Initial AIC & BIC produced models
+```{r}
+anova ( step.BIC, step.AIC )
+pchisq(2.0858, 1,lower.tail = FALSE)
+```
+**Analysis of Deviance Table**
+|Model|Resid. Df| Resid. Dev |Df| Deviance|
+|---|---|---|---|---|
+|AIC |      292 |    214.42  |   |       |
+|BIC |      291  |   212.34 | 1 |  2.0858|
+ANOVA model pvalue: 0.1486743
+> We choose the AIC model to do the interaction effects on becuase it has significant predictors and has a lower residual deviance of 214.42 Residual Deviance on 292 degrees of freedom. The ANOVA pvalue  (0.1486743) which is less than 0.05 (the typical cutoff).
+
+## Interaction Effects
+```{r}
+
+# Center quantitative predictors and add interaction effects
+
+my.center = function (y) y - mean (y)
+
+survival$TIME.c = my.center (survival$TIME)
+survival$Age.c = my.center (survival$Age)
+
+
+fit1_InteractionEffects = glm (Survival ~ (as.factor(EF) + TIME.c + CPK + `Serum Creatinine` + Age.c)^2,
+               data=survival, 
+               family = binomial)
+summary (fit1_InteractionEffects)
+
+```
+## Final Stepwise Regression 
+**Step-wise with AIC**
+```{r}
+step.AIC_final = step (fit1_InteractionEffects, direction = "both")
+summary(step.AIC_final)
+
+```
+**Step-wise with BIC**
+```{r}
+step.BIC_final = step (fit1_InteractionEffects, direction = "both",k=log (fit1_InteractionEffects$rank  + fit1_InteractionEffects$df.residual))
+summary(step.BIC_final)
+```
+## ANOVA for Final AIC & BIC produced models
+```{r}
+anova (step.AIC_final, step.BIC_final)
+pchisq(11.949, 3, lower.tail = FALSE)
+```
+**Analysis of Deviance Table**
+|Model|Resid. Df| Resid. Dev |Df| Deviance|
+|---|---|---|---|---|
+|Final AIC |      289 |    202.47  |   |       |
+|Final BIC |      292  |   214.42 | -3 | -11.949|
+ANOVA model pvalue: 0.007559923
+
+> We choose AIC model as final becuase it's Residual Deviance is 202.47 which less than the Residual Deviance 214.42 of the BIC model. The pvalue (0.0075599) is less than 0.05 which means that the two models are statistically differnt from each other.
+
+# Final Model
 
 
