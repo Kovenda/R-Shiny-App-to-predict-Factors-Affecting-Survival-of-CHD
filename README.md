@@ -87,3 +87,161 @@ corrplot (transcorr, method = "number", number.cex=0.6)
 ![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/correlation_matrix.jpg?raw=true)
 > The correlation matrix shows that the varaible Time and surviaval are higly correlated (0.53). Gender and Smoking have a high correlation as well(0.45). Survaial and Serum Creatinine appears to have a moderate correlation(0.37).
 
+3. **Odd Tables (using *xtabs* in the *MASS* library)**
+* **Survival vs EF**
+```{r}
+library(MASS) 
+table1= xtabs(~Survival+EF)
+table1
+
+```
+||EF 0|EF 1|EF 2|
+|---|---|---|---|
+|Survival 0|51|31|14|
+|Survival 1|42|115|46|
+
+> 93 patients had an Ejection Fraction of less than 30 %, while 146 have an Ejection Fraction of 30 to 45 % and only 60 have an Ejection Fraction higher than 45% . Of all the patients that had an ejection fraction less than 30 %, 55 % died of cardio-vascular heart disease. That is 32% more than the patients who died that had an ejection fraction higher than 45%. Patients with an ejection fraction between 30 and 45 % had the highest survival rate at 79 %. You have a higher chance of dying if your ejection fraction is less than 30 %.
+
+* **Survival vs Gender**
+```{r}
+library(MASS) 
+table2= xtabs(~Survival+Gender)
+table2
+
+```
+||Female|Male|
+|---|---|---|
+|Survival 0|34|62|
+|Survival 1|71|132|
+
+> Odds of surviving:
+> * Male 132/194 = 0.680
+> * Female 71/105 = 0.676 
+> * Odds Ratio for Male VS Female: 0.680/0.676 = 1.0059
+
+> Female patients are 1.0059 times more likely to survive cardio-vascular heart diseases than male patients. This essentially means the chances of survival for male and female patients is approximately 1 to 1.
+
+* **Survival vs Diabetes**
+```{r}
+library(MASS) 
+table2= xtabs(~Survival+Diabetes)
+table2
+
+```
+||Diabetes 0|Diabetes 1|
+|---|---|---|
+|Survival 0|56|40|
+|Survival 1|118|85|
+
+> Odds of not surviving:
+> * Diabetic 40/125 = 0.32
+> * Non-diabetic 56/174 = 0.32 
+> * Odds Ratio for Diabetic VS Non-Diabetic: 0.32/0.32 = 1
+
+> This essentially means the chances of not surviving for Diabetic and non-Diabetic patients is 1 to 1.
+
+
+* **Survival vs Sodium**
+```{r}
+library(MASS) 
+table2= xtabs(~Survival+Sodium)
+table2
+
+```
+||Sodium 0|Sodium 1|Sodium 2| Sodium 3|
+|---|---|---|---|---|
+|Survival 0|42|24|19|11|
+|Survival 1|41|70|61|31|
+
+> Urinary Sodium to creatine ratio or Sodium levels 0 to 3 represent the quartiles of the collected Sodium ratios, 0 being less 25th quartile and 3 being greater than 75th quartile. We can see that when the patient's Sodium to Creatine ratio is less than the 25th quartile they have less than 50% chance of surving cardio-vascular heart disaese. While pateints with Sodium to Creatine ratio greater than the 25th quartile all have higher than 70% chance of surviving cardio-vascular heart disease.
+
+
+## Fitting Initial Logistic Regression Model
+
+**Fitting**
+```{r}
+
+order1_fit1 <- glm (Survival  ~ as.factor(EF)  + `Serum Creatinine` + Diabetes + TIME + Gender + Smoking +  BP + Anaemia + Age  +  Sodium +  platelets + CPK, family = binomial) 
+summary(order1_fit1)
+ 
+```
+> Deviance Residuals: 
+
+| Min    |   1Q  | Median    |   3Q    |  Max  |
+|---|---|---|---|---|
+|-2.4184 | -0.4308 |  0.1899|   0.5562 |  2.7121  | 
+
+> Coefficients: 
+
+||   Estimate |Std. Error |z value| Pr(>abs(z)) | Significance|
+|---|---|---|---|---|---|
+|(Intercept)     |   -1.358485  | 1.308658  |-1.038| 0.299235 ||   
+|as.factor(EF)1|      1.836955 |  0.422611 |  4.347| 1.38e-05| ***|
+|as.factor(EF)2 |     1.857695 |  0.518107 |  3.586| 0.000336 |***|
+|Serum Creatinine|  1.678121|   0.429314 |  3.909 |9.27e-05 |***|
+|Diabetes |          -0.192139 |  0.359440 | -0.535| 0.592961 ||   
+|TIME |  0.022433  | 0.003194  | 7.024| 2.15e-12 |***|
+|Gender      |        0.553463 |  0.436964  | 1.267| 0.205295  | | 
+|Smoking|      -0.135759  | 0.430672 | -0.315| 0.752590 ||   
+|BP| -0.009470 |  0.368440 | -0.026| 0.979495 ||   
+|Anaemia| -0.049583  | 0.379851 | -0.131| 0.896146 ||   
+|Age|-0.046199  | 0.016617 | -2.780 |0.005432| ** |
+|Sodium |0.292238  | 0.184413 |  1.585 |0.113036||    
+|platelets |0.114345 |  0.165775 |  0.690 |0.490344 ||   
+|CPK |-0.397067 |  0.161646 | -2.456 |0.014034| *|
+
+> Signifance codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+> Null deviance: 375.35  on 298  degrees of freedom
+> Residual deviance: 209.93  on 285  degrees of freedom
+
+**Getting Coeffiecents for the fit**
+```{r}
+exp (order1_fit1$coefficients)
+```
+||(Intercept) |as.factor(EF)1|as.factor(EF)2 |Serum Creatinine|Diabetes|TIME|Gender|Smoking|BP|Anaemia|Age|Sodium|platelets|CPK|
+| --- |--- |---|--- |---|---|---|---|---|---|---|---|---|---|---|
+|Coefficients:|0.2570498|6.2773944| 6.4089462|5.3554847|0.8251924|1.0226867|1.7392656|0.8730532|0.9905751|0.9516266|0.9548522|1.3394224|1.1211391|0.6722891|
+
+
+**Getting Confidence Intervals**
+```{r}
+exp (confint (order1_fit1))
+```
+|                 |    2.5 %  |   97.5 %|
+|---|---|---|
+|(Intercept)   |     0.01872896 | 3.2432977|
+|as.factor(EF)1  |   2.80878250| 14.8482312|
+|as.factor(EF)2  |   2.40283407 |18.5011624|
+|Serum Creatinine| 2.35640903 |12.7988731|
+|Diabetes    |       0.40569020 | 1.6706351|
+|TIME |    1.01669786 | 1.0295687|
+|Gender |  0.74725273 | 4.1808057|
+|Smoking | 0.37153732 | 2.0267428|
+|BP |0.48198078 | 2.0566115|
+|Anaemia |0.45160198 | 2.0164303|
+|Age |0.92319656  |0.9856701|
+|Sodium | 0.93674051 | 1.9377001|
+|platelets|0.81029581 | 1.5569596|
+|CPK |0.48416180 | 0.9155519|
+
+> The model shows that pateints having an ejection fraction between 30 to 45 %  and higher 45 % are significantly different from patients who have an ejection fraction of less than 30 %. The model also shows that Serum Creatinine, Time, Age and CPK are significant predictors for predicting the survival of cardio-vascular heart disease. For every unit increase in Serum Creatinine the odds of surviving cardio-vascular disease go up by 5.3554847-folds. The odds of surviving cardio-vascular heart disease for male pateints vs female pateints is not only 1 to 1 as we predicted earlier but essentially ranges from 0.74725273 to  4.1808057 -folds. 
+
+## Model Evalution
+
+**Jittered *Actuals* vs *Predicted* logits**
+```{r}
+
+# Make a plot similar to Y vs Y-hat for linear regression
+order1_fit1.logit = predict (order1_fit1)
+plot (jitter (Survival, 0.2) ~ order1_fit1.logit, data=survival)
+# Add the overall fitted logistic curve to the plot, and a lowess fit
+pihat.order1_fit1 = predict (order1_fit1, type='response')
+pihat.ord = order (pihat.order1_fit1)
+lines (order1_fit1.logit [pihat.ord], pihat.order1_fit1 [pihat.ord])
+lines (lowess (order1_fit1.logit [pihat.ord], pihat.order1_fit1 [pihat.ord]), col='red', lty=2)
+
+```
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/jitteredActualsvsPredictedLogits.jpg.jpg?raw=true)
+> The jittered response vs. predicted values with the fitted logistic curve and a lowess fit shows that the model fits the data aaproximately well since the solid and the jittered line are approximately similar in shape.
+
+
