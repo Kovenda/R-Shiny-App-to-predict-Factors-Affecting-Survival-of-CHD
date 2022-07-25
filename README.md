@@ -47,7 +47,7 @@ head(survival)
 * > Serum Creatinine greater than its normal level (1.5) is an indicator of renal dysfunction. Its effect on mortality was studied as creatinine >1.5 (coded as 0) vs <1.5 (coded as 1). 
 * > Anemia in patients was assessed by their haematocrit level. The patients with haematocrit less than 36 (minimum normal level of haematocrit) were taken as anemic. 
 
-## Data Cleaning & Exploratory Analysis
+# Data Cleaning & Exploratory Analysis
 **Removing Null Values**
 ```{r}
 na.omit(survival)
@@ -156,7 +156,7 @@ table2
 > Urinary Sodium to creatine ratio or Sodium levels 0 to 3 represent the quartiles of the collected Sodium ratios, 0 being less 25th quartile and 3 being greater than 75th quartile. We can see that when the patient's Sodium to Creatine ratio is less than the 25th quartile they have less than 50% chance of surving cardio-vascular heart disaese. While pateints with Sodium to Creatine ratio greater than the 25th quartile all have higher than 70% chance of surviving cardio-vascular heart disease.
 
 
-## Fitting Initial Logistic Regression Model
+# Fitting Initial Logistic Regression Model
 
 **Fitting**
 ```{r}
@@ -231,10 +231,9 @@ exp (confint (order1_fit1))
 **Jittered *Actuals* vs *Predicted* logits**
 ```{r}
 
-# Make a plot similar to Y vs Y-hat for linear regression
 order1_fit1.logit = predict (order1_fit1)
 plot (jitter (Survival, 0.2) ~ order1_fit1.logit, data=survival)
-# Add the overall fitted logistic curve to the plot, and a lowess fit
+
 pihat.order1_fit1 = predict (order1_fit1, type='response')
 pihat.ord = order (pihat.order1_fit1)
 lines (order1_fit1.logit [pihat.ord], pihat.order1_fit1 [pihat.ord])
@@ -243,5 +242,68 @@ lines (lowess (order1_fit1.logit [pihat.ord], pihat.order1_fit1 [pihat.ord]), co
 ```
 ![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/jitteredActualsvsPredictedLogits.jpg?raw=true)
 > The jittered response vs. predicted values with the fitted logistic curve and a lowess fit shows that the model fits the data aaproximately well since the solid and the jittered line are approximately similar in shape.
+
+**Residuals Plots**
+```{r}
+plot(predict(order1_fit1),residuals(order1_fit1))
+abline(h=0,lty=1,col="brown")
+
+par (mfrow=c(1,2)) 
+plot (order1_fit1, which=c(5))
+
+```
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/residualsplot.jpg?raw=true)
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/residualsLEVERAGEplot.jpg?raw=true)
+> The linaerity condition is statisfied because the plot is flat and right on zero. There are no points with high leverage or high Cook's Distance therefore those influence measures do not appear on the plot. The point index 240 has a standerized residual around 6. We will see whether it is an influential point.
+
+## Inference Analysis to confirm that there is *no outliers*:
+**Pull out the cases with high leverage and large residuals.**
+```{r}
+survival$Residual = round (order1_fit1$residuals, 4)
+survival$leverage = round (hatvalues(order1_fit1), 4)
+survival$rstudent = round (rstudent(order1_fit1), 4)
+
+high.levg.resd = survival [survival$leverage > 3*(order1_fit1$rank) / (order1_fit1$rank + order1_fit1$df.residual) |abs (order1_fit1$residuals) > 30 , ]
+
+high.levg.resd[order(-high.levg.resd$rstudent),][c(1,9:17)]
+
+```
+||TIME  |  EF| Sodium |Serum Creatinine |platelets  | CPK| index |Residual| leverage| rstudent|
+|---|---|---|---|---|---|---|---|---|---|---|
+|1 |30|0 |1|0 |3|3|240 |39.6|0.0131|2.81|
+> Although index 240 has a large residual value, however, its 0.0131 leverage value is not bigger than the Leverage Cutoff value at 0.13043478 (3(k+1)/n). Therefore, this point is an influential point. We will see whether there are any other influential points that do not have high residuals as index 240.
+
+```{r}
+high.Leverage = survival [survival$leverage > 0.13043478 & is.na(survival$leverage) == FALSE, ]
+high.Leverage[order(-high.Leverage$leverage),][c(1,9:17)]
+
+```
+||TIME  |  EF| Sodium |Serum Creatinine |platelets  | CPK| index |Residual| leverage| rstudent|
+|---|---|---|---|---|---|---|---|---|---|---|
+|1  |  94  |   2  |    2 |  0     |    3  |   0 |  242   |  2.55 |   0.134  |   1.45|
+|2 |  172   |  0   |   3 |  0    |     3  |   3  | 222  |  -1.65 |   0.132  |  -1.05|
+> There are only 2 points with leverage values higher than the Leverage Cutoff value at 0.13043478 (3(k+1)/n). The point index 242 has the highest leverage value of 0.134.
+## Test for Multi-colinearity
+
+```{r}
+car::vif(order1_fit1)
+
+```
+| |GVIF| Df| GVIF^(1/(2*Df))|
+|---|---|---|---|
+|as.factor(EF)   |   1.328792 | 2 |       1.073654|
+|Serum Creatinine |1.166354 | 1    |    1.079979|
+|Diabetes |          1.044061 | 1  |      1.021793|
+|TIME     |          1.280348 | 1  |      1.131525|
+|Gender    |         1.464522 | 1   |     1.210174|
+|Smoking    |        1.343264 | 1    |    1.158993|
+|BP     |            1.063805 | 1  |      1.031409|
+|Anaemia    |        1.172183 | 1    |    1.082674|
+|Age     |           1.208652 | 1  |      1.099387|
+|Sodium     |        1.122267 | 1  |      1.059371|
+|platelets  |        1.088017 | 1    |    1.043081|
+|CPK      |          1.254166 | 1       | 1.119896|
+
+> All of the VIF are less than 5. Hence, multi-colinearity is low in our model. We will be doing stepwise regresion to find the best model.
 
 
