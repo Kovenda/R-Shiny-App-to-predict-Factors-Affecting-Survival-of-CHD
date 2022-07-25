@@ -47,12 +47,13 @@ head(survival)
 * > Serum Creatinine greater than its normal level (1.5) is an indicator of renal dysfunction. Its effect on mortality was studied as creatinine >1.5 (coded as 0) vs <1.5 (coded as 1). 
 * > Anemia in patients was assessed by their haematocrit level. The patients with haematocrit less than 36 (minimum normal level of haematocrit) were taken as anemic. 
 
-## Data Cleaning
-> *Removing Null Values*
+## Data Cleaning & Exploration
+**Removing Null Values**
 ```{r}
 na.omit(survival)
 ```
-> *Skewness Evaluation: Histograms (**ggplot** & **tidyr** library)*
+**Skewness Evaluation:** 
+1. **Histograms (*ggplot* & *tidyr* library)**
 ```{r}
 
 library (ggplot2)
@@ -63,7 +64,15 @@ ggplot(gather(survival), aes(value)) +
   facet_wrap(~key, scales = 'free_x')
 
 ```
-![alt text](https://github.com/[kovenda]/[Survival-of-Cardiovascular-Heart-Disease-CHD-]/blob/[main]/skewnessplot.jpg?raw=true)
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/skewnessplot.jpg?raw=true)
+> There is some skewness in the data, however, the plot shows that all the predictor variables are not exteremely right or left skewed. It is also noticeable from the plot that all the varaibles are catagorical variales expect for Age and Time.
 
+2. **Scatterplot Matrix**
+```{r}
+pairs (survival[,0:7], col= ifelse (Survival==1, "green", "red"))
+pairs (survival[,8:13], col= ifelse (Survival==1, "green", "red"))
+```
 
-
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/Scatterplot_matrix1.jpg?raw=true)
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/Scatterplot_matrix2.jpg?raw=true)
+> These plots further emphasize the minimum skewness in the data and the categorical sense of the majority of the variables.
