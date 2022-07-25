@@ -1,5 +1,8 @@
 # Survival of Cardiovascular Heart Disease-CHD
-To determine the factors that are most influential in patients’ survival of CHD. I created a **Logistic Regression model** in **R** using **RStudio** to predict the survival of CHD patients. **Extracted** the **data** from the **PHIS database** using **SQL**; built **tableau dashboards**. The **model predicted the survival of CHD** with an **AUC of over .90** and indicated that a higher **EF % is a major factor**.
+> To determine the factors that are most influential in patients’ survival of CHD. 
+> I created a **Logistic Regression model** in **R** using **RStudio** to predict the survival of CHD patients. 
+> **Extracted** the **data** from the **PHIS database** using **SQL**; built **tableau dashboards**. 
+> The **model predicted the survival of CHD** with an **AUC of over .90** and indicated that a higher **EF % is a major factor**.
 
 # Data 
 * The study is based on 299 patients of Cardiovascular Heart Disease (CHD) comprising of 105 women and 194 men. 
