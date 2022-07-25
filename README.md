@@ -47,12 +47,12 @@ head(survival)
 * > Serum Creatinine greater than its normal level (1.5) is an indicator of renal dysfunction. Its effect on mortality was studied as creatinine >1.5 (coded as 0) vs <1.5 (coded as 1). 
 * > Anemia in patients was assessed by their haematocrit level. The patients with haematocrit less than 36 (minimum normal level of haematocrit) were taken as anemic. 
 
-## Data Cleaning & Exploration
+## Data Cleaning & Exploratory Analysis
 **Removing Null Values**
 ```{r}
 na.omit(survival)
 ```
-**Skewness Evaluation:** 
+**Skewness and Correlation Analysis:** 
 1. **Histograms (*ggplot* & *tidyr* library)**
 ```{r}
 
@@ -76,3 +76,14 @@ pairs (survival[,8:13], col= ifelse (Survival==1, "green", "red"))
 ![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/Scatterplot_matrix1.jpg?raw=true)
 ![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/Scatterplot_matrix2.jpg?raw=true)
 > These plots further emphasize the minimum skewness in the data and the categorical sense of the majority of the variables.
+
+2. **Correlation Matrix (using *corplot library*)**
+```{r}
+transcorr = cor(survival [, c(1:10, 10, 12:13)], use= "complete.obs") 
+library("corrplot")
+corrplot (transcorr, method = "number", number.cex=0.6)
+```
+
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/correlation_matrix.jpg?raw=true)
+> The correlation matrix shows that the varaible Time and surviaval are higly correlated (0.53). Gender and Smoking have a high correlation as well(0.45). Survaial and Serum Creatinine appears to have a moderate correlation(0.37).
+
