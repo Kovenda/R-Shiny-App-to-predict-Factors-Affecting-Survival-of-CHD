@@ -52,4 +52,18 @@ head(survival)
 ```{r}
 na.omit(survival)
 ```
+> *Skewness Evaluation: Histograms (**ggplot** & **tidyr** library)*
+```{r}
+
+library (ggplot2)
+library (tidyr)
+
+ggplot(gather(survival), aes(value)) + 
+  geom_histogram(bins = 8) + 
+  facet_wrap(~key, scales = 'free_x')
+
+```
+![alt text](https://github.com/[kovenda]/[Survival-of-Cardiovascular-Heart-Disease-CHD-]/blob/[main]/skewnessplot.jpg?raw=true)
+
+
 
