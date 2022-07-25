@@ -436,7 +436,61 @@ qplot (`Serum Creatinine`, predict (final_model_1), data=survival, color=categor
 
 > The interaction plot between Serum Creatinine and time shows the predicted logits of surviving cardio-vascular disease increases over time because C1 (25th quartile of follow time) is the lowest and C4 (75th quartile of follow time) is the highest in the graph. This effect was already accounted for in the previuos interaction plot. Serum Creatinine was coded as follows, >1.5(indicator of renal dysfunction coded as 0) and < 1.5(normal level coded as 1). We can see from the positive slope of all four of the TIME graphs that all patients with renal dysfunction (0) have lower predicted logits of surviving than those who do not (1). All patients with follow up time in C4 (75 quartile),regardless of whether they have renal dysfuntion, have higher predicted logits of suriving cardio-vascular disease than all other patients in C1,2 & 3, regardless of whether those patients do not have renal dysfuntion. Patients with follow up time in C4 (75 quartile), also have the most noticeable change in the predicted logits for surviving cardio-vascular disease between patients with renal dysfunction(0) and patients without (0). 
 
+**Get Confidence Intervals**
+```{r}
+exp (confint (final_model_1))
+```
+|| 2.5 %|97.5 %|
+|---|---|---|
+|(Intercept) |0.2156857 | 1.1469405|
+|as.factor(EF)1 | 4.6119614 |43.0804413|
+|as.factor(EF)2 |2.0696061| 33.5811069|
+|TIME.c| 0.9980162 | 1.0189091|
+|CPK|0.4877742 | 0.9025785|
+|Serum Creatinine|2.9247387| 16.8167300|
+|Age.c |0.9191504 | 0.9814366|
+|as.factor(EF)1:TIME.c |1.0075532|1.0408464|
+|as.factor(EF)2:TIME.c |0.9911966 | 1.0294466|
+|TIME.c:Serum Creatinine| 0.9981325 | 1.0231982|
 
+> An increase in a unit of Creatinine Phosphokinase (CPK) decreases a patients of odds of surviving by 0.331-folds. A unit increase in Age decreases a patients odds of surviving by a range of 0.0808 to 0.01856-folds.
 
+## Patient Survival Predictions
 
+```{r}
+preds = predict (final_model_1, se.fit = T) 
+pred.df = cbind.data.frame (survival, as.data.frame (preds)) 
+pred.df$lwr = pred.df$fit - 1.96 * pred.df$se.fit 
+pred.df$upr = pred.df$fit + 1.96 * pred.df$se.fit 
+pred.df$fit.pr = round (exp (pred.df$fit) / (1 + exp (pred.df$fit)), 3) 
+pred.df$lwr.pr = round (exp (pred.df$lwr) / (1 + exp (pred.df$lwr)), 3) 
+pred.df$upr.pr = round (exp (pred.df$upr) / (1 + exp (pred.df$upr)), 3)
+head(pred.df)
+```
+**Prediction for Patients over 70**
+```{r}
+# Predictions for patients in their 70s and older. 
+pred.df[c(2, 17, 88, 48, 40),c(1,2,3,8,17:20)]
+
+```
+|  | TIME| Survival| Gender |Age| rstudent  |     TIME.c |   Age.c   |     fit|
+|---|---|---|---|---|---|---|---|---|
+|2   |180   |     1 |     1 | 73  | 0.6080 |  49.7391304| 12.16611 | 1.1497924|
+|17 |  28    |    0   |   1 | 85 | -0.5314| -102.2608696 |24.16611 |-2.4535981|
+|88|  130  |      0  |    0  |80 | -1.3707 |  -0.2608696 |19.16611 | 1.6151530|
+|48 | 109   |     0  |    1 | 80  |-1.4417|  -21.2608696 |19.16611 | 0.7575546|
+|40 |  24|   0 |  0 | 95 | -0.7606| -106.2608696 |34.16611 |-2.2647920|
+
+**Predictions for patients in their 40s and 50s**
+```{r} 
+pred.df[c(103, 66, 83, 21, 11),c(1,2,3,8,17:20)]
+```
+||TIME| Survival| Gender| Age rstudent|     TIME.c  |    Age.c |       fit|
+|---|---|---|---|---|---|---|---|---|
+|103 |  61   |     0  |    1 | 45 | -2.1708 | -69.26087| -15.833893 | 0.5607006|
+|66  |  11   |     0    |  1 | 45 | -0.5346 |-119.26087| -15.833893| -1.3798815|
+|83 |  196    |    0    |  0  |54 | -2.1218 |  65.73913|  -6.833893 | 1.8771453|
+|21 |  192   |     1    |  1 | 50 |  0.1934 |  61.73913| -10.833893|  4.1820001|
+
+11   119        1      1  50   0.4907  -11.26087 -10.833893  2.6773956
 
