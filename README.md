@@ -241,7 +241,7 @@ lines (order1_fit1.logit [pihat.ord], pihat.order1_fit1 [pihat.ord])
 lines (lowess (order1_fit1.logit [pihat.ord], pihat.order1_fit1 [pihat.ord]), col='red', lty=2)
 
 ```
-![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/jitteredActualsvsPredictedLogits.jpg.jpg?raw=true)
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/jitteredActualsvsPredictedLogits.jpg?raw=true)
 > The jittered response vs. predicted values with the fitted logistic curve and a lowess fit shows that the model fits the data aaproximately well since the solid and the jittered line are approximately similar in shape.
 
 
