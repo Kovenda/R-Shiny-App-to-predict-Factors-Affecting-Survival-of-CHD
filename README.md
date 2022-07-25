@@ -336,7 +336,7 @@ pchisq(2.0858, 1,lower.tail = FALSE)
 ANOVA model pvalue: 0.1486743
 > We choose the AIC model to do the interaction effects on becuase it has significant predictors and has a lower residual deviance of 214.42 Residual Deviance on 292 degrees of freedom. The ANOVA pvalue  (0.1486743) which is less than 0.05 (the typical cutoff).
 
-## Interaction Effects
+## Adding Interaction Effects to the initial model
 ```{r}
 
 # Center quantitative predictors and add interaction effects
@@ -380,5 +380,63 @@ ANOVA model pvalue: 0.007559923
 > We choose AIC model as final becuase it's Residual Deviance is 202.47 which less than the Residual Deviance 214.42 of the BIC model. The pvalue (0.0075599) is less than 0.05 which means that the two models are statistically differnt from each other.
 
 # Final Model
+```{r}
+final_model_1 = step.AIC_final
+summary(final_model_1)
+```
+> Deviance Residuals:
+
+| Min   |     1Q  |  Median     |   3Q    |   Max|  
+|---|---|---|---|---|
+|-2.71103 | -0.49728 |  0.08546 |  0.50304 |  2.33555  |
+
+> Coefficients:
+
+|                        | Estimate| Std. Error |z value| Pr(>abs(z)) | Significance|  
+|---|---|---|---|---|---|
+|(Intercept) |  -0.683582 |  0.423220 | -1.615 | 0.10627 |  | 
+|as.factor(EF)1| 2.555116  | 0.564167 |  4.529| 5.93e-06 |*** |
+|as.factor(EF)2| 1.955026 |  0.694497 |  2.815 | 0.00488| ** |
+|TIME.c| 0.008115|   0.005224  | 1.553  |0.12032 ||   
+|CPK|-0.401538 |  0.156240 | -2.570  |0.01017| *  |
+|Serum Creatinine | 1.924515 |  0.443882 |  4.336 |1.45e-05| *** |
+|Age.c  |-0.050382  | 0.016646 | -3.027 | 0.00247| ** |
+|as.factor(EF)1:TIME.c | 0.022274 |  0.008176 |  2.724 | 0.00644| ** |
+|as.factor(EF)2:TIME.c | 0.008078  | 0.009461  | 0.854 | 0.39321 ||   
+|TIME.c:Serum Creatinine | 0.010449 |  0.006271 |  1.666 | 0.09565| . |
+
+> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+## Interaction Plots
+
+```{r}
+categorize = function (x, quantiles=(1:3)/4) {
+  cutoffs = quantile (x, quantiles)
+  n.cutoffs = length (cutoffs)
+  result = rep ("C1", length (x))
+  
+  for (j in 1:n.cutoffs) {
+    result [x > cutoffs [j]] = paste ("C", j+1, sep="")
+  }
+  return (result)
+}
+
+library (ggplot2)
+
+qplot (TIME, predict (final_model_1), data=survival, color=categorize (EF)) + geom_smooth (method="lm")
+
+qplot (`Serum Creatinine`, predict (final_model_1), data=survival, color=categorize (TIME)) + geom_smooth (method="lm")
+
+```
+
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/interactionplot1.jpg?raw=true)
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/interactionplot2.jpg?raw=true)
+
+> The interaction plot between time and Ejection Fracton shows that the predicted logits of suriving cardio-vascular disease increases over time for all ejection fraction (EF) categories(EF<30 (coded as 0), 30<EF<45 (coded as 1)). Patients with 30<EF<45 have the highest rise in the predicted logits of suriving cardio-vascular disease over time. We had mentioned earlier with our frequency table that patients with an ejection fraction (EF) between 30 and 45 % had the highest survival rate at 79 %. However, with this interaction plot with time we see that statement holds true only for patients whose follow up time was longer than 100 days. We see that for patients with a follow up time of less than 25 days, they have lowest predicted logits of suriving cardio-vascular disease. 
+
+> The interaction plot between Serum Creatinine and time shows the predicted logits of surviving cardio-vascular disease increases over time because C1 (25th quartile of follow time) is the lowest and C4 (75th quartile of follow time) is the highest in the graph. This effect was already accounted for in the previuos interaction plot. Serum Creatinine was coded as follows, >1.5(indicator of renal dysfunction coded as 0) and < 1.5(normal level coded as 1). We can see from the positive slope of all four of the TIME graphs that all patients with renal dysfunction (0) have lower predicted logits of surviving than those who do not (1). All patients with follow up time in C4 (75 quartile),regardless of whether they have renal dysfuntion, have higher predicted logits of suriving cardio-vascular disease than all other patients in C1,2 & 3, regardless of whether those patients do not have renal dysfuntion. Patients with follow up time in C4 (75 quartile), also have the most noticeable change in the predicted logits for surviving cardio-vascular disease between patients with renal dysfunction(0) and patients without (0). 
+
+
+
 
 
