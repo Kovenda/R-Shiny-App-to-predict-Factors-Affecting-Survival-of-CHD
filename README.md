@@ -486,11 +486,122 @@ pred.df[c(2, 17, 88, 48, 40),c(1,2,3,8,17:20)]
 pred.df[c(103, 66, 83, 21, 11),c(1,2,3,8,17:20)]
 ```
 ||TIME| Survival| Gender| Age rstudent|     TIME.c  |    Age.c |       fit|
-|---|---|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|
 |103 |  61   |     0  |    1 | 45 | -2.1708 | -69.26087| -15.833893 | 0.5607006|
 |66  |  11   |     0    |  1 | 45 | -0.5346 |-119.26087| -15.833893| -1.3798815|
 |83 |  196    |    0    |  0  |54 | -2.1218 |  65.73913|  -6.833893 | 1.8771453|
 |21 |  192   |     1    |  1 | 50 |  0.1934 |  61.73913| -10.833893|  4.1820001|
+|11  | 119    |    1    |  1  |50  | 0.4907 | -11.26087 |-10.833893  |2.6773956|
 
-11   119        1      1  50   0.4907  -11.26087 -10.833893  2.6773956
+## Model Evaluation (Influence diagnostics analysis)
 
+### Diagnostic Plot (Jittered Actualls vs Predicted Odds)
+```{r}
+
+par (mfrow=c(1,2))
+plot (jitter (Survival, 0.2) ~ predict (final_model_1), data=survival)
+logit.9 = predict (final_model_1)
+ord9 = order (logit.9)
+pihat.9 = exp (logit.9) / (1 + exp (logit.9))
+lines (logit.9 [ord9], pihat.9 [ord9])
+
+# Lowess fit
+lines (lowess (logit.9, survival$Survival), col='red', lty=2)
+plot (final_model_1, which=1)
+
+```
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/final_Diagnosticplot.jpg?raw=true)
+
+### Likelihood ratio test
+
+```{r}
+
+pchisq (final_model_1$null.deviance - final_model_1$deviance,
+        final_model_1$df.null - final_model_1$df.residual, lower.tail = F)
+
+```
+pvalue = 1.553978e-32
+> The pvalue (1.553978e-32) is less than 0.05, therfore we reject the null hypothesis and conclude that at least one of our parameters is different from zero.
+
+### Goodness of fit test
+```{r}
+# Goodness of fit test
+
+pchisq (final_model_1$deviance, final_model_1$df.residual, lower.tail = F)
+```
+pvalue = 0.9999696
+> The p_value(0.9999696) is bigger than (0.05), suggesting that there is no significant lack of fit in the model.
+
+### Leverage and Residuals plot
+
+```{r}
+
+plot(final_model_1,which = 5)
+
+```
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/final_residualLEVERAGE.jpg?raw=true)
+
+### ROC plot:
+
+```{r}
+# ROC Curve for model final_model_1
+
+# ROC curve - install package ROCR
+
+par (mfrow=c(1,1))
+library(ROCR)
+pred1 <- prediction(final_model_1$fitted.values, final_model_1$y)
+perf1 <- performance(pred1,"tpr","fpr")
+auc1 <- performance(pred1,"auc")@y.values[[1]]
+auc1
+plot(perf1, lwd=2, col=2)
+abline(0,1)
+legend(0.6, 0.3, c(paste ("AUC=", round (auc1, 4), sep="")),   lwd=2, col=2)
+
+# Extract the X and Y values from the ROC plot, as well as the probability cutoffs
+roc.x = slot (perf1, "x.values") [[1]]
+roc.y = slot (perf1, "y.values") [[1]]
+cutoffs = slot (perf1, "alpha.values") [[1]]
+
+auc.table = cbind.data.frame(cutoff=pred1@cutoffs, 
+                             tp=pred1@tp, fp=pred1@fp, tn=pred1@tn, fn=pred1@fn)
+names (auc.table) = c("Cutoff", "TP", "FP", "TN", "FN")
+auc.table$sensitivity = auc.table$TP / (auc.table$TP + auc.table$FN)
+auc.table$specificity = auc.table$TN / (auc.table$TN + auc.table$FP)
+auc.table$FalsePosRate = 1 - auc.table$specificity
+auc.table$sens_spec = auc.table$sensitivity + auc.table$specificity
+
+# Find the row(s) in the AUC table where sensitivity + specificity is maximized
+
+auc.best = auc.table [auc.table$sens_spec == max (auc.table$sens_spec),]
+auc.best
+
+# Plot the maximum point(s) on the ROC plot
+
+points (auc.best$FalsePosRate, auc.best$sensitivity, cex=1.3)
+
+```
+![alt text](https://github.com/kovenda/Survival-of-Cardiovascular-Heart-Disease-CHD-/blob/main/final_ROCcurve.jpg?raw=true)
+> The AUC is 0.916, meaning that the model correctly predicted for 91.6% of the cases in our dataset. This suggests that our final model predicts surviving cardio-vascular disease better than simply guessing.
+
+### Confusion Matrix
+|| Actual Positive | Actual Negative|
+|---|---|---|
+|Predicted Positive|TP 171|FP 15| 
+|Predicted Negative|FN 32|TN 81|
+
+|Cutoff|sensitivity|specificity|FalsePosRate|sens_spec|
+|---|---|---|---|---|
+||TP/(TP+FN)|TN/(TN+FP)|1-specificity|sensitivity+specificity|
+|0.6412728|0.8423645|0.84375|0.15625|1.686115|
+
+> Our cutoff for determining predictions of failure or no failure was 0.6412. This has a false positive rate of 0.156 and a sensitivity (probability of a true positive prediction) of 0.84.
+
+# Conclusion
+We can conclude that, among the predictor variables from our dataset, the presence of Ejection Fraction, Time, Creatinine Phosphokinase (CPK), Serum Creatinine and Age were helpful in explaining patients' survival Cardiovascular Heart Disease (CHD). 
+We also found a significant interaction effect between Time and Ejection Fraction. The AUC of this model is 0.916, showing that these five variables and the four interaction plots help predict patients' survival Cardiovascular Heart Disease (CHD) better than simply guessing, and the low p-value of 1.553978e-32 from the Likelihood Ratio test confirmed the significance of the model. The model’s sensitivity was  0.84 and specificity was 0.84375, suggesting that the model does a much better job predicting non-failures than failures.
+This analysis begs the question of what other variables can explain dam failure, as the variables from this set could not fully account for dam failure.
+
+**Some follow-up questions to this analysis could include:**
+1. Our analysis shows that an increase in age decreases a patient's chance of survival; it also indicates that if a patient is older than 75 years, with EF of 1 or 2, no renal dysfunction and has a follow-up time after 100 days(not sick). Those patients will have a better survival rate than those who have the same age but have renal dysfunction and EF of 0. Will creating an educational program that prevents renal dysfunction and maintains an EF level of 1 or 2 to improve the survival rate for patients older than 75 years and who have a follow-up time after 100 days.
+2. Are there other factors that could be measured, such as obeisty, cholestrol, family history and physical inactivity that could improve the predictability of the model?
