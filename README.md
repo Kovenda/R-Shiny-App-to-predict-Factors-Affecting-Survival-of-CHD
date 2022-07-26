@@ -42,6 +42,7 @@ head(survival)
 
 **Predictor Descriptions**
 * > Time is follow up time was 4 to 285 days with an average of 130 days.
+* > Gender was divided into two levels ( Male coded as 1, Female coded as 0)
 * > EF was divided into three levels (i.e. EF<30 (coded as 0), 30<EF<45 (coded as 1) and EF>45 (coded as 2)) and platelets was also divided into three level on the basis of quartiles. 
 * > Sodium was also coded into three levels based on the quartiles
 * > Serum Creatinine greater than its normal level (1.5) is an indicator of renal dysfunction. Its effect on mortality was studied as creatinine >1.5 (coded as 0) vs <1.5 (coded as 1). 
