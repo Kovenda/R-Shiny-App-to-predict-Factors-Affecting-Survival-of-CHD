@@ -1,5 +1,9 @@
+# Shiny App: Survival of Cardiovascular Heart Disease (CHD)
 
-# Survival of Cardiovascular Heart Disease (CHD)
+> Built a shiny app that use the logistic model below and pateint details provided by the user to predict the factors that will influence the patient's survival. 
+
+
+# Model Building: Survival of Cardiovascular Heart Disease (CHD)
 >The main objective of this study is to determine the factors that are critical for survival among Cardiovascular Heart Disease (CHD) Patients.
 * I created a **Logistic Regression model** in **R** using **RStudio** to predict the survival of CHD patients. 
 * **Extracted** the **data** from the **PHIS database** using **SQL**; built **tableau dashboards**. 
